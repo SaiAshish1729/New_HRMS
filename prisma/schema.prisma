@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id         Int    @id @default(autoincrement())
+  department String
+
+  createdAt DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt DateTime? @updatedAt @db.Timestamp(6)
+  deletedAt DateTime? @db.Timestamp(6)
+  User      User[]
+
+  @@map("departments")
+}
+
+model Role {
+  id         Int       @id @default(autoincrement())
+  role       String
+  created_at DateTime  @default(now())
+  deleted_at DateTime?
+  User       User[]
+
+  @@map("roles")
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String
+  password      String
+  department    Department @relation(references: [id], fields: [department_id])
+  department_id Int
+  designation   String?
+  role          Role       @relation(references: [id], fields: [role_id])
+  role_id       Int
+
+  createdAt  DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime?    @updatedAt @db.Timestamp(6)
+  deletedAt  DateTime?    @db.Timestamp(6)
+  Attendance Attendance[]
+
+  @@map("users")
+}
+
+model Attendance {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  date         DateTime  @db.Date
+  checkIn      DateTime?
+  checkOut     DateTime?
+  status       String    @default("PRESENT")
+  workingHours String?
+  remarks      String? // "Late arrival", "Half day"
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@map("attendences")
+}
