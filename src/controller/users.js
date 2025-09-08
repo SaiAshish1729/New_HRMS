@@ -237,16 +237,17 @@ const allUserList = async (req, h) => {
                             lte: endOfDay
                         }
                     },
-                    select: { checkIn: true }
+                    select: { checkIn: true, checkOut: true, workingHours: true }
                 });
 
                 return {
                     ...user,
-                    todayCheckIn_at: formatIST(attendance?.checkIn)
+                    todayCheckIn_at: formatIST(attendance?.checkIn),
+                    todaysCheckout_at: formatIST(attendance?.checkOut),
+                    total_working_hours: attendance?.workingHours,
                 };
             })
         );
-
 
         return h.response({
             success: true,
@@ -262,69 +263,6 @@ const allUserList = async (req, h) => {
         return h.response({ message: "Server error while fetching user list", error }).code(500);
     }
 };
-
-// const userCheckout = async (req, h) => {
-//     try {
-//         const user = req.user;
-//         const now = new Date();
-
-//         // Get today's date (UTC) for @db.Date comparison
-//         const todayStr = now.toISOString().split("T")[0];
-//         const today = new Date(todayStr);
-
-//         // Find today's attendance
-//         let attendance = await prisma.attendance.findUnique({
-//             where: {
-//                 userId_date: {
-//                     userId: user.id,
-//                     date: today,
-//                 },
-//             },
-//         });
-
-//         if (!attendance) {
-//             return h
-//                 .response({ success: false, message: "No check-in found for today" })
-//                 .code(400);
-//         }
-
-//         if (attendance.checkOut) {
-//             return h
-//                 .response({ success: false, message: "Already checked out today" })
-//                 .code(400);
-//         }
-
-//         // Update checkout & calculate working hours
-//         const updatedAttendance = await prisma.attendance.update({
-//             where: {
-//                 userId_date: {
-//                     userId: user.id,
-//                     date: today,
-//                 },
-//             },
-//             data: {
-//                 checkOut: now,
-//                 workingHours: attendance.checkIn
-//                     ? parseFloat(
-//                         ((now - attendance.checkIn) / (1000 * 60 * 60)).toFixed(2)
-//                     )
-//                     : null,
-//             },
-//         });
-
-//         return h.response({
-//             success: true,
-//             message: "Checked out successfully",
-//             checkOut: formatIST(updatedAttendance.checkOut),
-//             workingHours: updatedAttendance.workingHours,
-//         })
-//             .code(200);
-//     } catch (error) {
-//         console.log(error);
-//         return h.response({ message: "Server error while checkout", error }).code(500);
-//     }
-// };
-
 
 const userCheckout = async (req, h) => {
     try {
@@ -346,9 +284,7 @@ const userCheckout = async (req, h) => {
         });
 
         if (!attendance) {
-            return h
-                .response({ success: false, message: "No check-in found for today" })
-                .code(400);
+            return h.response({ success: false, message: "No check-in found for today" }).code(400);
         }
 
         if (attendance.checkOut) {
@@ -380,13 +316,12 @@ const userCheckout = async (req, h) => {
             },
         });
 
-        return h
-            .response({
-                success: true,
-                message: "Checked out successfully",
-                checkOut: formatIST(updatedAttendance.checkOut),
-                workingHours: updatedAttendance.workingHours,
-            })
+        return h.response({
+            success: true,
+            message: "Checked out successfully",
+            checkOut: formatIST(updatedAttendance.checkOut),
+            workingHours: updatedAttendance.workingHours,
+        })
             .code(200);
     } catch (error) {
         console.log(error);
