@@ -15,7 +15,6 @@ function formatIST(date) {
     return formatInTimeZone(date, IST_TIMEZONE, "dd-MM-yyyy hh:mm:ss a");
 }
 
-
 const addUsers = async (req, h) => {
     try {
         const { name, email, password, department_id, designation, role_id } = req.payload;
@@ -312,7 +311,7 @@ const userCheckout = async (req, h) => {
             },
             data: {
                 checkOut: now,
-                workingHours: workingHoursStr, // <-- store as string
+                workingHours: workingHoursStr,
             },
         });
 
@@ -321,13 +320,10 @@ const userCheckout = async (req, h) => {
             message: "Checked out successfully",
             checkOut: formatIST(updatedAttendance.checkOut),
             workingHours: updatedAttendance.workingHours,
-        })
-            .code(200);
+        }).code(200);
     } catch (error) {
         console.log(error);
-        return h
-            .response({ message: "Server error while checkout", error })
-            .code(500);
+        return h.response({ message: "Server error while checkout", error }).code(500);
     }
 };
 
