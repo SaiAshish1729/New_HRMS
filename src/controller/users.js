@@ -238,7 +238,6 @@ const allUserList = async (req, h) => {
                     },
                     select: { checkIn: true, checkOut: true, workingHours: true }
                 });
-
                 return {
                     ...user,
                     todayCheckIn_at: formatIST(attendance?.checkIn),
@@ -287,9 +286,7 @@ const userCheckout = async (req, h) => {
         }
 
         if (attendance.checkOut) {
-            return h
-                .response({ success: false, message: "Already checked out today" })
-                .code(400);
+            return h.response({ success: false, message: "Already checked out today" }).code(400);
         }
 
         // Calculate hours & minutes
@@ -300,7 +297,6 @@ const userCheckout = async (req, h) => {
             const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
             workingHoursStr = `${hours} hours ${minutes} minutes`;
         }
-
         // Update checkout
         const updatedAttendance = await prisma.attendance.update({
             where: {
@@ -314,6 +310,20 @@ const userCheckout = async (req, h) => {
                 workingHours: workingHoursStr,
             },
         });
+        if (workingHoursStr < "6 hours 0 minutes") {
+            await prisma.attendance.update({
+                where: {
+                    userId_date: {
+                        userId: user.id,
+                        date: today,
+                    },
+                },
+                data: {
+                    status: "HALF DAY",
+                },
+            });
+
+        }
 
         return h.response({
             success: true,
